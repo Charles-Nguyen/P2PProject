@@ -14,12 +14,10 @@ import java.nio.charset.StandardCharsets;
 public class FileTransferServer {
 	public static void connect() throws Exception {
 		// Initialize Sockets
-		System.out.println("This is the server running");
 		ServerSocket ssock = new ServerSocket(5000);
 		Socket socket = ssock.accept();
 
-		File root = new File(
-				"C:\\Users\\Connor\\workspace\\CECS327\\src\\Files");
+		File root = new File("Files");
 		File[] toSend = root.listFiles();
 		String fileNames = "";
 		for (File f : toSend)
@@ -49,15 +47,12 @@ public class FileTransferServer {
 			contents = new byte[size];
 			bis.read(contents, 0, size);
 			os.write(contents);
-			// System.out.print("Sending file ... " + (current * 100) /
-			// fileLength + "% complete! ");
 		}
 		os.flush();
 		bis.close();
 		socket.close();
 
 		// START
-		// System.out.println("before accept");
 		socket = ssock.accept();
 		contents = new byte[10000];
 
@@ -80,14 +75,12 @@ public class FileTransferServer {
 		socket.close();
 
 		// GETTING FILES FROM CLIENT THAT SERVER NEEDS
-		for (String snap : filesServerNeeds) {
+		for (String fileName : filesServerNeeds) {
 			socket = ssock.accept();
 			contents = new byte[10000];
 
 			// Initialize the FileOutputStream to the output file's full path.
-			FileOutputStream fos = new FileOutputStream(
-					"C:\\Users\\Connor\\workspace\\CECS327\\src\\Files\\"
-							+ snap);
+			FileOutputStream fos = new FileOutputStream("Files\\" + fileName);
 			BufferedOutputStream bos = new BufferedOutputStream(fos);
 			is = socket.getInputStream();
 
@@ -104,13 +97,10 @@ public class FileTransferServer {
 		}
 
 		// SENDING FILES CLIENT NEEDS
-		//System.out.println(filesClientNeeds.length);
-		for (String shap : filesClientNeeds) {
+		for (String fileName : filesClientNeeds) {
 			socket = ssock.accept();
 			contents = new byte[10000];
-			File file = new File(
-					"C:\\Users\\Connor\\workspace\\CECS327\\src\\Files\\"
-							+ shap);
+			File file = new File("Files\\" + fileName);
 			FileInputStream fis = new FileInputStream(file);
 			bis = new BufferedInputStream(fis);
 
@@ -139,6 +129,6 @@ public class FileTransferServer {
 
 		socket.close();
 		ssock.close();
-		System.out.println("File sent succesfully!");
+		System.out.println("Files synched succesfully!");
 	}
 }

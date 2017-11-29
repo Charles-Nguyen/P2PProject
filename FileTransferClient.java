@@ -16,10 +16,8 @@ import java.util.Arrays;
 public class FileTransferClient {
 	public static void connect(String ip) throws Exception {
 		// Initialize socket
-		System.out.println("This is the client running");
 		Socket socket = new Socket(InetAddress.getByName(ip), 5000);
 		byte[] contents = new byte[10000];
-		//System.out.println(socket.getLocalPort());
 
 		ByteArrayOutputStream stream = new ByteArrayOutputStream();
 		InputStream is = socket.getInputStream();
@@ -29,10 +27,8 @@ public class FileTransferClient {
 		while ((bytesRead = is.read(contents)) != -1)
 			stream.write(contents, 0, bytesRead);
 
-		//System.out.println(stream);
 		String[] serverFiles = stream.toString().split("/");
-		File root = new File(
-				"C:\\Users\\Connor\\workspace\\CECS327\\src\\Files");
+		File root = new File("Files");
 		File[] toSend = root.listFiles();
 		ArrayList<String> Files = new ArrayList<String>();
 		for (File f : toSend)
@@ -93,12 +89,10 @@ public class FileTransferClient {
 		// END
 
 		// SENDING FILES THAT SERVER NEEDS
-		for (String shop : serverNeedsFiles) {
+		for (String fileName : serverNeedsFiles) {
 			socket = new Socket(InetAddress.getByName(ip), 5000);
 			contents = new byte[10000];
-			File file = new File(
-					"C:\\Users\\Connor\\workspace\\CECS327\\src\\Files\\"
-							+ shop);
+			File file = new File("Files\\" + fileName);
 			FileInputStream fis = new FileInputStream(file);
 			bis = new BufferedInputStream(fis);
 
@@ -128,15 +122,12 @@ public class FileTransferClient {
 		// START RECEIVING FILES NEEDED FROM SERVER
 		String[] receivedFiles = (neededFiles.split("\\|")[0]).split("/");
 		//System.out.println(receivedFiles.length);
-		for (String slap : receivedFiles) {
-			//System.out.println(slap);
+		for (String fileName : receivedFiles) {
 			socket = new Socket(InetAddress.getByName(ip), 5000);
 			contents = new byte[10000];
 
 			// Initialize the FileOutputStream to the output file's full path.
-			FileOutputStream fos = new FileOutputStream(
-					"C:\\Users\\Connor\\workspace\\CECS327\\src\\Files\\"
-							+ slap);
+			FileOutputStream fos = new FileOutputStream("Files\\" + fileName);
 			BufferedOutputStream bos = new BufferedOutputStream(fos);
 			is = socket.getInputStream();
 
@@ -152,7 +143,7 @@ public class FileTransferClient {
 			socket.close();
 		}
 
-		System.out.println("File saved successfully!");
+		System.out.println("Files synched successfully!");
 	}
 
 }
