@@ -26,24 +26,46 @@ public class FileTransferClient {
 
 		while ((bytesRead = is.read(contents)) != -1)
 			stream.write(contents, 0, bytesRead);
-
-		String[] serverFiles = stream.toString().split("/");
+		
+		String[] fileData = stream.toString().split("\\|");
+		String[] serverFileNames = fileData[0].split("/");
+		String[] serverFileDates = fileData[1].split("/");
 		File root = new File("Files");
 		File[] toSend = root.listFiles();
 		ArrayList<String> Files = new ArrayList<String>();
 		for (File f : toSend)
 			Files.add(f.getName());
-
+		
+		String filesServerNeeds = "";
+		// determining the files the client needs from the server
 		String neededFiles = "";
-		for (String n : serverFiles) {
-			if (!Files.contains(n)) {
-				neededFiles += n + "/";
+		for (int i = 0; i < serverFileNames.length; i++) {
+			if (!Files.contains(serverFileNames[i])) {
+				neededFiles += serverFileNames[i] + "/";
+			}
+			else
+			{
+				File sameName = null;
+				for (File f : toSend) {
+					if (f.getName().equals(serverFileNames[i]))
+					{
+						sameName = f;
+					}
+				}
+				
+				if (Long.parseLong(serverFileDates[i]) > sameName.lastModified()) {
+					neededFiles += serverFileNames[i] + "/";
+				}
+				else
+				{
+					filesServerNeeds += serverFileNames[i] + "/";
+				}
 			}
 		}
-
+		// determining the files the server needs from the client
 		ArrayList<String> serverFiles2 = new ArrayList<>(
-				Arrays.asList(serverFiles));
-		neededFiles += "|";
+				Arrays.asList(serverFileNames));
+		neededFiles += "|" + filesServerNeeds;
 		for (String n : Files) {
 			if (!serverFiles2.contains(n)) {
 				neededFiles += n + "/";

@@ -20,11 +20,17 @@ public class FileTransferServer {
 		File root = new File("Files");
 		File[] toSend = root.listFiles();
 		String fileNames = "";
+		String fileModification = "";
 		for (File f : toSend)
+		{
 			fileNames += f.getName() + "/";
+			fileModification += f.lastModified() + "/";
+		}
+		String fileData = fileNames + "|" + fileModification;
+		System.out.println("server sends to client initially: " + fileData);
 
 		InputStream stream = new ByteArrayInputStream(
-				fileNames.getBytes(StandardCharsets.UTF_8.name()));
+				fileData.getBytes(StandardCharsets.UTF_8.name()));
 
 		BufferedInputStream bis = new BufferedInputStream(stream);
 
@@ -64,18 +70,21 @@ public class FileTransferServer {
 		while ((bytesRead = is.read(contents)) != -1)
 			needed.write(contents, 0, bytesRead);
 
+		System.out.println("Raw version:" + needed);
 		String[] splitUp = needed.toString().split("\\|");
 		// System.out.println(needed.toString());
 		String[] filesClientNeeds = splitUp[0].split("/");
 		String[] filesServerNeeds = splitUp[1].split("/");
-		// System.out.println(splitUp[0]);
+		//System.out.println("This is the raw version:" + splitUp[0]);
 		// System.out.println(splitUp[1]);
 		// END
 		needed.close();
 		socket.close();
 
 		// GETTING FILES FROM CLIENT THAT SERVER NEEDS
+		System.out.println("Files server needs:");
 		for (String fileName : filesServerNeeds) {
+			System.out.println(fileName);
 			socket = ssock.accept();
 			contents = new byte[10000];
 
@@ -97,7 +106,9 @@ public class FileTransferServer {
 		}
 
 		// SENDING FILES CLIENT NEEDS
+		System.out.println("Files client needs:");
 		for (String fileName : filesClientNeeds) {
+			System.out.println(fileName);
 			socket = ssock.accept();
 			contents = new byte[10000];
 			File file = new File("Files\\" + fileName);

@@ -8,11 +8,12 @@ import java.util.Scanner;
 
 public class PortBroadcast implements Runnable {
 	public static HashSet<String> ipsSynched = new HashSet<String>();
+	public static boolean isBusy = false;
 	public static void main(String[] args) throws Exception {
 		Thread clientThread = new Thread(new PortBroadcast());
 		clientThread.start();
 		while (true) {
-			ServerSocket ssock = new ServerSocket(4999);
+			ServerSocket ssock = new ServerSocket(4997);
 			Socket sock = ssock.accept();
 			//System.out.println(sock.getInetAddress());
 			FileTransferServer.connect();
@@ -26,14 +27,13 @@ public class PortBroadcast implements Runnable {
 	@Override
 	public void run() {
 		while (true) {
-
 			try {
 				ArrayList<String> ipsToReach = getIps();
 				for (String ip : ipsToReach) {
 					System.out.println(ipsSynched);
 					if (!ipsSynched.contains("/" + ip))
 					{
-						Socket sock = new Socket(InetAddress.getByName(ip), 4999);
+						Socket sock = new Socket(InetAddress.getByName(ip), 4997);
 						FileTransferClient.connect(ip);
 						System.out.println("ip client saves: " + sock.getInetAddress().toString());
 						ipsSynched.add(sock.getInetAddress().toString());
