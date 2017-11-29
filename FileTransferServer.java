@@ -83,6 +83,10 @@ public class FileTransferServer {
 
 		// GETTING FILES FROM CLIENT THAT SERVER NEEDS
 		System.out.println("Files server needs:");
+		if (filesServerNeeds[0].equals(""))
+		{
+			filesServerNeeds = new String[0];
+		}
 		for (String fileName : filesServerNeeds) {
 			System.out.println(fileName);
 			socket = ssock.accept();
@@ -107,8 +111,12 @@ public class FileTransferServer {
 
 		// SENDING FILES CLIENT NEEDS
 		System.out.println("Files client needs:");
+		if (filesClientNeeds[0].equals(""))
+		{
+			filesClientNeeds = new String[0];
+		}
 		for (String fileName : filesClientNeeds) {
-			System.out.println(fileName);
+			System.out.println(fileName + "is length " + fileName.length());
 			socket = ssock.accept();
 			contents = new byte[10000];
 			File file = new File("Files\\" + fileName);

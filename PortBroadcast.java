@@ -6,22 +6,35 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Scanner;
 
-public class PortBroadcast implements Runnable {
+import javax.swing.*;
+
+public class PortBroadcast extends JFrame implements Runnable {
 	public static HashSet<String> ipsSynched = new HashSet<String>();
-	public static boolean isBusy = false;
+	private static DrawingPanel panel;
 	public static void main(String[] args) throws Exception {
+//		PortBroadcast f = new PortBroadcast();
+//		f.setTitle("File Synchronization");
+//		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//		f.setVisible(true);
 		Thread clientThread = new Thread(new PortBroadcast());
 		clientThread.start();
 		while (true) {
 			ServerSocket ssock = new ServerSocket(4997);
 			Socket sock = ssock.accept();
-			//System.out.println(sock.getInetAddress());
+			panel.setIp(sock.getInetAddress().toString());
 			FileTransferServer.connect();
 			System.out.println("ip server saves: " + sock.getInetAddress().toString());
 			ipsSynched.add(sock.getInetAddress().toString());
 			sock.close();
 			ssock.close();
 		}
+	}
+	
+	public PortBroadcast()
+	{
+		setBounds(100, 100, 800, 640);
+		panel = new DrawingPanel();
+		getContentPane().add(panel);
 	}
 
 	@Override

@@ -28,8 +28,12 @@ public class FileTransferClient {
 			stream.write(contents, 0, bytesRead);
 		
 		String[] fileData = stream.toString().split("\\|");
-		String[] serverFileNames = fileData[0].split("/");
-		String[] serverFileDates = fileData[1].split("/");
+		String[] serverFileNames = new String[0];
+		String[] serverFileDates = new String[0];
+		if (!stream.toString().equals("|")) {
+			serverFileNames = fileData[0].split("/");
+			serverFileDates = fileData[1].split("/");
+		}
 		File root = new File("Files");
 		File[] toSend = root.listFiles();
 		ArrayList<String> Files = new ArrayList<String>();
@@ -71,7 +75,7 @@ public class FileTransferClient {
 				neededFiles += n + "/";
 			}
 		}
-		//System.out.println(neededFiles);
+		System.out.println(neededFiles);
 		String[] serverNeedsFiles = (neededFiles.split("\\|")[1]).split("/");
 
 		stream.close();
@@ -111,6 +115,10 @@ public class FileTransferClient {
 		// END
 
 		// SENDING FILES THAT SERVER NEEDS
+		if (serverNeedsFiles[0].equals(""))
+		{
+			serverNeedsFiles = new String[0];
+		}
 		for (String fileName : serverNeedsFiles) {
 			socket = new Socket(InetAddress.getByName(ip), 5000);
 			contents = new byte[10000];
@@ -143,7 +151,10 @@ public class FileTransferClient {
 
 		// START RECEIVING FILES NEEDED FROM SERVER
 		String[] receivedFiles = (neededFiles.split("\\|")[0]).split("/");
-		//System.out.println(receivedFiles.length);
+		if (receivedFiles[0].equals(""))
+		{
+			receivedFiles = new String[0];
+		}
 		for (String fileName : receivedFiles) {
 			socket = new Socket(InetAddress.getByName(ip), 5000);
 			contents = new byte[10000];
