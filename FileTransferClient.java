@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class FileTransferClient {
-	public static void connect(String ip) throws Exception {
+	public static String[] connect(String ip) throws Exception {
 		// Initialize socket
 		Socket socket = new Socket(InetAddress.getByName(ip), 5000);
 		byte[] contents = new byte[10000];
@@ -177,6 +177,7 @@ public class FileTransferClient {
 		}
 
 		System.out.println("Files synched successfully!");
+		return receivedFiles;
 	}
 
 }

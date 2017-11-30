@@ -8,8 +8,8 @@ public class DrawingPanel extends JPanel
 implements MouseListener, Runnable
 {
 	private Thread refresh;
-	private String ipConnectedTo;
-	private String filesReceived;
+	private static String ipConnectedTo;
+	private static String[] filesReceived = new String[0];
 	public DrawingPanel()
 	{
 		setBackground(Color.BLACK);
@@ -41,8 +41,14 @@ implements MouseListener, Runnable
 	public void paintComponent(Graphics g)
 	{
 		super.paintComponent(g);
-		
-		//g.drawString("TIME: " + (TIME_LIMIT - timeElapsed), 100, 590);
+		g.setColor(Color.YELLOW);
+		g.drawString("You are connected to: " + ipConnectedTo, 100, 190);
+		int offset = 0;
+		for (String file : filesReceived)
+		{
+			g.drawString("You received: " + file, 100, 290 + offset);
+			offset += 30;
+		}
 	}
 	
 	public void setIp(String ip)
@@ -50,7 +56,7 @@ implements MouseListener, Runnable
 		ipConnectedTo = ip;
 	}
 	
-	public void setFiles(String files)
+	public void setFiles(String[] files)
 	{
 		filesReceived = files;
 	}

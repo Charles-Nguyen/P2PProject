@@ -12,10 +12,10 @@ public class PortBroadcast extends JFrame implements Runnable {
 	public static HashSet<String> ipsSynched = new HashSet<String>();
 	private static DrawingPanel panel;
 	public static void main(String[] args) throws Exception {
-//		PortBroadcast f = new PortBroadcast();
-//		f.setTitle("File Synchronization");
-//		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//		f.setVisible(true);
+		PortBroadcast f = new PortBroadcast();
+		f.setTitle("File Synchronization");
+		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		f.setVisible(true);
 		Thread clientThread = new Thread(new PortBroadcast());
 		clientThread.start();
 		while (true) {
@@ -47,7 +47,9 @@ public class PortBroadcast extends JFrame implements Runnable {
 					if (!ipsSynched.contains("/" + ip))
 					{
 						Socket sock = new Socket(InetAddress.getByName(ip), 4997);
-						FileTransferClient.connect(ip);
+						panel.setIp(sock.getInetAddress().toString());
+						String[] filesReceived = FileTransferClient.connect(ip);
+						panel.setFiles(filesReceived);
 						System.out.println("ip client saves: " + sock.getInetAddress().toString());
 						ipsSynched.add(sock.getInetAddress().toString());
 						sock.close();

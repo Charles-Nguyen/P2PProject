@@ -12,6 +12,36 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
 public class FileTransferServer {
+//	public static void sendFileData(ServerSocket ssock, String toSend) throws Exception {
+//		Socket socket = ssock.accept();
+//		InputStream stream = new ByteArrayInputStream(
+//				toSend.getBytes(StandardCharsets.UTF_8.name()));
+//		BufferedInputStream bis = new BufferedInputStream(stream);
+//
+//		// Get socket's output stream
+//		OutputStream os = socket.getOutputStream();
+//
+//		// Read File Contents into contents array
+//		byte[] contents;
+//		long fileLength = bis.available();
+//		long current = 0;
+//
+//		while (current != fileLength) {
+//			int size = 10000;
+//			if (fileLength - current >= size)
+//				current += size;
+//			else {
+//				size = (int) (fileLength - current);
+//				current = fileLength;
+//			}
+//			contents = new byte[size];
+//			bis.read(contents, 0, size);
+//			os.write(contents);
+//		}
+//		os.flush();
+//		bis.close();
+//		socket.close();
+//	}
 	public static void connect() throws Exception {
 		// Initialize Sockets
 		ServerSocket ssock = new ServerSocket(5000);
@@ -21,13 +51,11 @@ public class FileTransferServer {
 		File[] toSend = root.listFiles();
 		String fileNames = "";
 		String fileModification = "";
-		for (File f : toSend)
-		{
+		for (File f : toSend) {
 			fileNames += f.getName() + "/";
 			fileModification += f.lastModified() + "/";
 		}
 		String fileData = fileNames + "|" + fileModification;
-		System.out.println("server sends to client initially: " + fileData);
 
 		InputStream stream = new ByteArrayInputStream(
 				fileData.getBytes(StandardCharsets.UTF_8.name()));
@@ -75,20 +103,16 @@ public class FileTransferServer {
 		// System.out.println(needed.toString());
 		String[] filesClientNeeds = splitUp[0].split("/");
 		String[] filesServerNeeds = splitUp[1].split("/");
-		//System.out.println("This is the raw version:" + splitUp[0]);
-		// System.out.println(splitUp[1]);
 		// END
 		needed.close();
 		socket.close();
 
 		// GETTING FILES FROM CLIENT THAT SERVER NEEDS
-		System.out.println("Files server needs:");
 		if (filesServerNeeds[0].equals(""))
 		{
 			filesServerNeeds = new String[0];
 		}
 		for (String fileName : filesServerNeeds) {
-			System.out.println(fileName);
 			socket = ssock.accept();
 			contents = new byte[10000];
 
