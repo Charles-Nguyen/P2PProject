@@ -1,24 +1,45 @@
 import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
 
 import javax.swing.JPanel;
 
+/**
+ * The GUI for our project, that displays which IP the user has connected with and what files they received from them.
+ * @author Connor Beckett-Lemus and Charles Nguyen
+ */
 public class DrawingPanel extends JPanel 
-implements MouseListener, Runnable
+implements Runnable
 {
+	/**
+	 * The thread used for refreshing what's shown on the screen.
+	 */
 	private Thread refresh;
+	/**
+	 * The ip address of the machine you're currently connected to.
+	 */
 	private static String ipConnectedTo;
+	/**
+	 * The files you received from the machine you're currently connected to.
+	 */
 	private static String[] filesReceived = new String[0];
+	/**
+	 * The last time filesReceived was modified.
+	 */
+	private static long lastModified = 0;
+	
+	/**
+	 * Initializes the drawing panel with a black background.
+	 */
 	public DrawingPanel()
 	{
 		setBackground(Color.BLACK);
-		addMouseListener(this);
 		setFocusable(true);
 		refresh = new Thread(this);
 		refresh.start();
 	}
 
+	/**
+	 * The method that repeatedly refreshed the GUI every 50 ms.
+	 */
 	@Override
 	public void run()
 	{
@@ -35,8 +56,9 @@ implements MouseListener, Runnable
 			System.out.println("Thread interrupted.");
 		}
 	}
+	
 	/**
-	 * Updates positional values of all objects and draws the game accordingly.
+	 * Updates the information about who you're connected to and updates the GUI accordingly.
 	 */
 	public void paintComponent(Graphics g)
 	{
@@ -51,52 +73,24 @@ implements MouseListener, Runnable
 		}
 	}
 	
+	/**
+	 * Changes the stored ip address to the one you're connected to.
+	 * @param ip The ip address you're currently connected to.
+	 */
 	public void setIp(String ip)
 	{
 		ipConnectedTo = ip;
 	}
 	
+	/**
+	 * Changes the stored file list with the ones you've received.
+	 * @param files The files you've just received.
+	 */
 	public void setFiles(String[] files)
 	{
-		filesReceived = files;
-	}
-	
-	/**
-	 * When a click is made in the gameframe, the hunter fires a bullet.
-	 * @param e The mouse click that triggers this method.
-	 */
-	@Override
-	public void mouseClicked(MouseEvent e)
-	{
-//		int clickX = e.getX();
-//		int clickY = e.getY();
-//		if (GAMEFRAME.contains(new Point(clickX, clickY)))
-//		{
-//			hunter.fireBullet();
-//		}
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseExited(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mousePressed(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void mouseReleased(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-		
+		if (System.currentTimeMillis() > lastModified + 5000) {
+			filesReceived = files;
+			lastModified = System.currentTimeMillis();
+		}
 	}
 }

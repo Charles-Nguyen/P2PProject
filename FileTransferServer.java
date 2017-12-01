@@ -5,47 +5,29 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * This class deals with synchronizing files as a server with a corresponding machine
+ * running the client version.
+ * @author Connor Beckett-Lemus and Charles Nguyen
+ */
 public class FileTransferServer {
-//	public static void sendFileData(ServerSocket ssock, String toSend) throws Exception {
-//		Socket socket = ssock.accept();
-//		InputStream stream = new ByteArrayInputStream(
-//				toSend.getBytes(StandardCharsets.UTF_8.name()));
-//		BufferedInputStream bis = new BufferedInputStream(stream);
-//
-//		// Get socket's output stream
-//		OutputStream os = socket.getOutputStream();
-//
-//		// Read File Contents into contents array
-//		byte[] contents;
-//		long fileLength = bis.available();
-//		long current = 0;
-//
-//		while (current != fileLength) {
-//			int size = 10000;
-//			if (fileLength - current >= size)
-//				current += size;
-//			else {
-//				size = (int) (fileLength - current);
-//				current = fileLength;
-//			}
-//			contents = new byte[size];
-//			bis.read(contents, 0, size);
-//			os.write(contents);
-//		}
-//		os.flush();
-//		bis.close();
-//		socket.close();
-//	}
-	public static void connect() throws Exception {
-		// Initialize Sockets
+	/**
+	 * Connects to a machine acting as a client, and coordinates with it so both
+	 * machines know which files need to be send to and from each machine.
+	 * The files that are synchronized are those in a folder called "Files",
+	 * located a directory one level above the source code of this program.
+	 * @return The files received from the client.
+	 */
+	public static String[] connect() {
+		try {
 		ServerSocket ssock = new ServerSocket(5000);
-		Socket socket = ssock.accept();
 
 		File root = new File("Files");
 		File[] toSend = root.listFiles();
@@ -57,72 +39,99 @@ public class FileTransferServer {
 		}
 		String fileData = fileNames + "|" + fileModification;
 
-		InputStream stream = new ByteArrayInputStream(
-				fileData.getBytes(StandardCharsets.UTF_8.name()));
+		sendFileData(ssock, fileData);
+		
+		String[] splitUp = getMissingFileNames(ssock);
+		String[] filesClientNeeds = splitUp[0].split("/");
+		String[] filesServerNeeds = splitUp[1].split("/");
 
-		BufferedInputStream bis = new BufferedInputStream(stream);
+		getFilesFromClient(ssock, filesServerNeeds);
 
-		// Get socket's output stream
-		OutputStream os = socket.getOutputStream();
-
-		// Read File Contents into contents array
-		byte[] contents;
-		long fileLength = bis.available();
-		long current = 0;
-
-		while (current != fileLength) {
-			int size = 10000;
-			if (fileLength - current >= size)
-				current += size;
-			else {
-				size = (int) (fileLength - current);
-				current = fileLength;
-			}
-			contents = new byte[size];
-			bis.read(contents, 0, size);
-			os.write(contents);
+		sendFilesToClient(ssock, filesClientNeeds);
+		ssock.close();
+		return filesServerNeeds;
 		}
-		os.flush();
+		catch (IOException e) {
+			System.out.println("Problem initializing server socket.");
+			return null;
+		}
+	}
+	
+	/**
+	 * Sends a string containing the names and last modified date of all the files
+	 * on the server machine to the client machine.
+	 * @param ssock The server socket used for connecting.
+	 * @param toSend The file data, formatted as such: The names and the last modified date
+	 * are separated with |, then the individual names/dates are separated with /.
+	 * Ex: dog.txt/cat.txt/|84274983/12837128/
+	 */
+	public static void sendFileData(ServerSocket ssock, String toSend) {
+		try {
+		Socket socket = ssock.accept();
+		InputStream stream = new ByteArrayInputStream(
+				toSend.getBytes(StandardCharsets.UTF_8.name()));
+		BufferedInputStream bis = new BufferedInputStream(stream);
+		
+		long fileLength = bis.available();
+		sendBytes(socket, bis, fileLength);
 		bis.close();
 		socket.close();
-
-		// START
-		socket = ssock.accept();
-		contents = new byte[10000];
+		}
+		catch (IOException e) {
+			System.out.println("Encoding issue with socket.");
+		}
+	}
+	
+	/**
+	 * Gets a list from the client of file names that the server and the client
+	 * are missing from each other
+	 * @param ssock The server socket used to connect with.
+	 * @return The list of file names that the server and the client are missing from each other.
+	 * The server and client's needed files are separated with |, then the individual files
+	 * are separated with /.
+	 */
+	public static String[] getMissingFileNames(ServerSocket ssock) {
+		try {
+		Socket socket = ssock.accept();
+		byte[] contents = new byte[10000];
 
 		OutputStream needed = new ByteArrayOutputStream();
 		InputStream is = socket.getInputStream();
-		// No of bytes read in one read() call
 		int bytesRead = 0;
 
 		while ((bytesRead = is.read(contents)) != -1)
 			needed.write(contents, 0, bytesRead);
-
-		System.out.println("Raw version:" + needed);
-		String[] splitUp = needed.toString().split("\\|");
-		// System.out.println(needed.toString());
-		String[] filesClientNeeds = splitUp[0].split("/");
-		String[] filesServerNeeds = splitUp[1].split("/");
-		// END
+		
+		String[] missingFileNames = needed.toString().split("\\|");
 		needed.close();
 		socket.close();
-
-		// GETTING FILES FROM CLIENT THAT SERVER NEEDS
-		if (filesServerNeeds[0].equals(""))
-		{
-			filesServerNeeds = new String[0];
+		return missingFileNames;
 		}
-		for (String fileName : filesServerNeeds) {
-			socket = ssock.accept();
-			contents = new byte[10000];
+		catch (IOException e) {
+			System.out.println("Socket issue.");
+			return null;
+		}
+	}
+	
+	/**
+	 * Receives the necessary files from the client.
+	 * @param ssock The server socket used for connection.
+	 * @param neededFiles The files the server is missing from the client.
+	 */
+	public static void getFilesFromClient(ServerSocket ssock, String[] neededFiles) {
+		try {
+		if (neededFiles[0].equals("")) {
+			neededFiles = new String[0];
+		}
+		for (String fileName : neededFiles) {
+			Socket socket = ssock.accept();
+			byte[] contents = new byte[10000];
 
-			// Initialize the FileOutputStream to the output file's full path.
 			FileOutputStream fos = new FileOutputStream("Files\\" + fileName);
 			BufferedOutputStream bos = new BufferedOutputStream(fos);
-			is = socket.getInputStream();
+			InputStream is = socket.getInputStream();
 
-			// No of bytes read in one read() call
-			bytesRead = 0;
+			int bytesRead = 0;
 
 			while ((bytesRead = is.read(contents)) != -1)
 				bos.write(contents, 0, bytesRead);
@@ -132,46 +141,69 @@ public class FileTransferServer {
 			is.close();
 			socket.close();
 		}
-
-		// SENDING FILES CLIENT NEEDS
-		System.out.println("Files client needs:");
-		if (filesClientNeeds[0].equals(""))
-		{
-			filesClientNeeds = new String[0];
 		}
-		for (String fileName : filesClientNeeds) {
-			System.out.println(fileName + "is length " + fileName.length());
-			socket = ssock.accept();
-			contents = new byte[10000];
+		catch (IOException e) {
+			System.out.println("Socket issue.");
+		}
+	}
+	
+	/**
+	 * Sends the files to the client that it's missing from the server.
+	 * @param ssock The server socket used for connection.
+	 * @param neededFiles The list of files the client is missing.
+	 */
+	public static void sendFilesToClient(ServerSocket ssock, String[] neededFiles) {
+		try {
+		if (neededFiles[0].equals("")) {
+			neededFiles = new String[0];
+		}
+		for (String fileName : neededFiles) {
+			Socket socket = ssock.accept();
 			File file = new File("Files\\" + fileName);
+			long fileLength = file.length();
+			
 			FileInputStream fis = new FileInputStream(file);
-			bis = new BufferedInputStream(fis);
+			BufferedInputStream bis = new BufferedInputStream(fis);
 
-			os = socket.getOutputStream();
-
-			fileLength = file.length();
-			current = 0;
-
-			while (current != fileLength) {
-				int size = 10000;
-				if (fileLength - current >= size)
-					current += size;
-				else {
-					size = (int) (fileLength - current);
-					current = fileLength;
-				}
-				contents = new byte[size];
-				bis.read(contents, 0, size);
-				os.write(contents);
-				//System.out.print("Sending file ... " + (current * 100) / fileLength + "% complete!");
-			}
-			os.flush();
+			sendBytes(socket, bis, fileLength);
 			bis.close();
 			socket.close();
 		}
+		}
+		catch (IOException e) {
+			System.out.println("Socket issue.");
+		}
+	}
+	
+	/**
+	 * The low-level file transfer that sends files in 10000 byte packets.
+	 * @param socket The socket used for connection.
+	 * @param bis The buffered input stream used to read the sent data from.
+	 * @param fileLength The size of the file being sent.
+	 */
+	public static void sendBytes(Socket socket, BufferedInputStream bis, long fileLength) {
+		try {
+		OutputStream os = socket.getOutputStream();
+		byte[] contents = new byte[10000];
+		long current = 0;
 
-		socket.close();
-		ssock.close();
-		System.out.println("Files synched succesfully!");
+		while (current != fileLength) {
+			// current is how many bytes have been sent so far
+			int size = 10000;
+			if (fileLength - current >= size)
+				current += size;
+			else { // if there are less than 10000 bytes left to send:
+				size = (int) (fileLength - current);
+				current = fileLength;
+			}
+			contents = new byte[size];
+			bis.read(contents, 0, size);
+			os.write(contents);
+		}
+		os.flush();
+		}
+		catch (IOException e) {
+			System.out.println("Socket issue.");
+		}
 	}
 }
