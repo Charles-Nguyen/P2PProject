@@ -64,8 +64,8 @@ public class FileTransferClient {
 				// determines if the files have been modified if they have been last
 				// modified more than a minute apart (to account for latency).
 				// most recent version is sent to the other machine.
-				boolean hasBeenModified = Math.abs(Long.parseLong(serverFileDates[i]) - sameName.lastModified()) < 60000;
-				if (hasBeenModified) {
+				boolean hasBeenModified = (Math.abs(Long.parseLong(serverFileDates[i]) - sameName.lastModified())) < 20000;
+				if (!hasBeenModified) {
 					if (Long.parseLong(serverFileDates[i]) > sameName.lastModified())
 						missingFileNames += serverFileNames[i] + "/";
 					else
